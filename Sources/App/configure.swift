@@ -4,20 +4,33 @@ import FluentPostgresDriver
 import Vapor
 
 // configures your application
-public func configure(_ app: Application) async throws {
-    // uncomment to serve files from /Public folder
-    // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
+public func configure(_ app: Application) throws {
+    // Создайте конфигурацию для PostgreSQL
+    let postgresConfig = SQLPostgresConfiguration(
+        hostname: "localhost",       // Адрес базы данных
+        port: 5432,                  // Порт базы данных
+        username: "postgres",        // Имя пользователя
+        password: "password",        // Пароль пользователя
+        database: "exercises",       // Имя базы данных
+        tls: .disable //Конфигурация протокола шифрования данных - отключаем
+    )
 
-    app.databases.use(DatabaseConfigurationFactory.postgres(configuration: .init(
-        hostname: Environment.get("DATABASE_HOST") ?? "localhost",
-        port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
-        username: Environment.get("DATABASE_USERNAME") ?? "vapor_username",
-        password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
-        database: Environment.get("DATABASE_NAME") ?? "vapor_database",
-        tls: .prefer(try .init(configuration: .clientDefault)))
+    // Настройка базы данных с использованием SQLPostgresConfiguration
+    app.databases.use(.postgres(
+        configuration: postgresConfig,
+        maxConnectionsPerEventLoop: 10,            // Максимальное количество соединений на event loop
+        connectionPoolTimeout: .seconds(10),       // Таймаут для пула соединений
+        encodingContext: .default,                // Настройки кодирования
+        decodingContext: .default,                // Настройки декодирования
+        sqlLogLevel: .debug                       // Уровень логирования SQL-запросов
     ), as: .psql)
 
-    app.migrations.add(CreateTodo())
-    // register routes
+    // Добавьте миграции
+    app.migrations.add(CreateExercise())
+
+    // Автоматически применяйте миграции
+    try app.autoMigrate().wait()
+    
+    // Регистрация маршрутов
     try routes(app)
 }
