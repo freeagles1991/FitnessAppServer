@@ -1,12 +1,17 @@
-Packages
-.build
-xcuserdata
-*.xcodeproj
-DerivedData/
+# macOS файлы
 .DS_Store
-db.sqlite
+
+# Swift Package Manager
 .swiftpm
+.build
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcworkspace
+
+# Локальные настройки
 .env
-.env.*
-! .env.example
-.vscode
+
+# Логи
+*.log
